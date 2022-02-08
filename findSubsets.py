@@ -1,6 +1,23 @@
 from itertools import combinations
+import cProfile, pstats, io
 
 
+def profile(fnc):
+    def inner(*args, **kwargs):
+        pr = cProfile.Profile()
+        pr.enable()
+        retval = fnc(*args, **kwargs)
+        pr.disable()
+        s = io.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        print(s.getvalue())
+        return retval
+    return inner
+
+
+@profile
 def findSubsets(setList):
     last_changed = setList.copy()
     for i, a in enumerate(last_changed):
@@ -15,21 +32,22 @@ def findSubsets(setList):
     return last_changed
 
 
-def findSubsetsWhile(lstSets):
-    last_changed = lstSets.copy()
-    to_change = lstSets.copy()
+@profile
+def findSubsetsWhile(lst_sets):
+    last_changed = lst_sets.copy()
+    to_change = lst_sets.copy()
     index = 0
-    eleLeft = len(to_change)
-    while eleLeft > index:
+    elem_left = len(to_change)
+    while elem_left > index:
         rem = 0
-        for i in list(range(eleLeft)):
-            if i == len(last_changed)-(index+1):
+        for i in list(range(elem_left)):
+            if i == elem_left - (index + 1):
                 break
             elif len(last_changed[index].intersection(last_changed[index + i + 1])) >= 3:
-                to_change.remove(last_changed[index+i+1])
+                del to_change[index + i + 1 - rem]
                 rem += 1
         index += 1
-        eleLeft -= rem
+        elem_left -= rem
         last_changed = to_change.copy()
     print("WHILE LENGTH", len(last_changed))
     return last_changed
